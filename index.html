@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Radar de Boletins - DBM 5/M</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  <style>
+    :root{--red:#861f1f;--red2:#6f1717;--dark:#1f2937;--muted:#6b7280;--bg:#f3f4f6;--green:#2f7d45;--warn:#f59e0b;--card:#fff}
+    *{box-sizing:border-box} body{margin:0;font-family:Arial,Helvetica,sans-serif;background:var(--bg);color:#111827}.top{background:linear-gradient(135deg,var(--red),var(--red2));color:white;padding:20px 24px;box-shadow:0 3px 12px rgba(0,0,0,.18)}.top h1{margin:0;font-size:28px}.top p{margin:6px 0 0;font-size:15px;opacity:.93}.wrap{max-width:1100px;margin:22px auto;padding:0 16px}.card{background:var(--card);border-radius:20px;padding:22px;margin-bottom:18px;box-shadow:0 10px 28px rgba(0,0,0,.08)}h2{margin:0 0 12px;font-size:22px}.help{color:#4b5563;line-height:1.55;margin-bottom:14px}.grid{display:grid;grid-template-columns:1fr auto auto;gap:12px;align-items:center}.grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}.btn{border:0;border-radius:8px;padding:13px 18px;font-size:16px;font-weight:700;cursor:pointer;background:var(--dark);color:white}.btn.red{background:var(--red)}.btn.green{background:var(--green)}.btn.gray{background:#e5e7eb;color:#111}.btn.warn{background:#b45309}.btn:disabled{opacity:.5;cursor:not-allowed}input[type=file],input[type=text]{width:100%;border:1px solid #e5e7eb;border-radius:8px;padding:12px;background:#fff;font-size:16px}textarea{width:100%;min-height:145px;border:1px solid #e5e7eb;border-radius:8px;padding:14px;font-size:15px;resize:vertical}.status{margin-top:12px;font-weight:700}.ok{color:var(--green)}.bad{color:#b91c1c}.warnText{color:#92400e}.small{font-size:13px;color:var(--muted)}.results{display:grid;gap:12px}.result{border:1px solid #e5e7eb;border-left:6px solid var(--red);border-radius:12px;background:#fff;padding:14px}.result.high{border-left-color:var(--green)}.result.med{border-left-color:var(--warn)}.result h3{margin:0 0 8px;font-size:18px}.pill{display:inline-block;border-radius:999px;padding:4px 9px;font-size:12px;font-weight:700;margin-right:5px;background:#eef2ff;color:#3730a3}.pill.green{background:#dcfce7;color:#166534}.pill.warn{background:#fef3c7;color:#92400e}.pill.red{background:#fee2e2;color:#991b1b}.snippet{margin-top:10px;background:#f9fafb;border-radius:8px;padding:10px;white-space:pre-wrap;line-height:1.35;font-size:14px}.actions{display:flex;gap:10px;flex-wrap:wrap;justify-content:flex-end}.progress{height:10px;background:#e5e7eb;border-radius:999px;overflow:hidden;margin-top:10px}.bar{height:100%;width:0;background:var(--red);transition:.2s}.table{width:100%;border-collapse:collapse}.table th,.table td{border-bottom:1px solid #e5e7eb;text-align:left;padding:9px;font-size:14px}.table th{background:#f9fafb}.hidden{display:none}.badge{background:#111827;color:white;border-radius:999px;padding:2px 8px;font-size:12px} @media(max-width:760px){.grid{grid-template-columns:1fr}.grid2{grid-template-columns:1fr}.actions{justify-content:stretch}.btn{width:100%}.top h1{font-size:24px}.card{padding:18px;border-radius:18px}}
+  </style>
+</head>
+<body>
+  <div class="top"><h1>🚒 Radar de Boletins</h1><p>V2: aceita PDF na base, salva militares, busca por RG/ID/nome, localiza página e gera texto pronto para WhatsApp.</p></div>
+  <div class="wrap">
+    <div class="card">
+      <h2>1. Base de militares</h2>
+      <div class="help">Importe a relação nominal em <b>PDF</b>, TXT, CSV ou XLSX. O processamento é feito no seu navegador; nada é enviado para servidor.</div>
+      <div class="grid">
+        <input id="baseFile" type="file" accept=".pdf,.txt,.csv,.xlsx,.xls" />
+        <button class="btn" onclick="loadExample()">Carregar exemplo</button>
+        <button class="btn red" onclick="processBase()">Processar base</button>
+      </div>
+      <textarea id="baseText" placeholder="Ou cole aqui a relação nominal... Ex: SD BM Q02/24 WILLIAM OLIVEIRA BARBOSA JUNIOR WILLIAM JUNIOR 54202 0051520389 DBM 5/M"></textarea>
+      <div class="grid2" style="margin-top:12px">
+        <input id="targetUnit" type="text" value="DBM 5/M" placeholder="Unidade alvo, ex: DBM 5/M" />
+        <input id="targetWords" type="text" value="DBM 5/M, DBM 5M, Sepetiba" placeholder="Palavras-chave da unidade" />
+      </div>
+      <div id="baseStatus" class="status warnText">⚠️ Nenhum militar identificado. Importe PDF/TXT/CSV/XLSX ou cole a relação.</div>
+      <div id="basePreview" class="small"></div>
+    </div>
+
+    <div class="card">
+      <h2>2. Boletim PDF</h2>
+      <div class="help">Selecione o PDF do boletim. O app lê página por página, mostra página, trecho e confiança.</div>
+      <div class="grid">
+        <input id="pdfFile" type="file" accept=".pdf" />
+        <button class="btn red" onclick="analyzeBulletin()">Analisar boletim</button>
+      </div>
+      <div id="pdfStatus" class="status"></div>
+      <div class="progress hidden" id="progress"><div class="bar" id="bar"></div></div>
+    </div>
+
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;gap:12px;align-items:center;flex-wrap:wrap">
+        <h2>3. Resultados <span id="count" class="badge">0</span></h2>
+        <div class="actions"><button class="btn" onclick="copyReport()">Copiar relatório</button><button class="btn green" onclick="exportCSV()">Exportar CSV</button><button class="btn gray" onclick="clearAll()">Limpar</button></div>
+      </div>
+      <div id="results" class="results"></div>
+    </div>
+  </div>
+
+<script>
+pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+let militares = JSON.parse(localStorage.getItem('radar_militares_v2')||'[]');
+let resultados = [];
+let lastBaseRaw = localStorage.getItem('radar_base_raw_v2')||'';
+document.getElementById('baseText').value = lastBaseRaw;
+if(militares.length) updateBaseStatus();
+
+function norm(s){return (s||'').toString().normalize('NFD').replace(/[\u0300-\u036f]/g,'').toUpperCase().replace(/\s+/g,' ').trim()}
+function digits(s){return (s||'').toString().replace(/\D/g,'')}
+function esc(s){return (s||'').replace(/[&<>"]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m]))}
+
+async function fileToText(file){
+  const name = file.name.toLowerCase();
+  if(name.endsWith('.pdf')) return await pdfToText(file, true);
+  if(name.endsWith('.xlsx')||name.endsWith('.xls')){
+    const buf = await file.arrayBuffer(); const wb = XLSX.read(buf,{type:'array'}); let out='';
+    wb.SheetNames.forEach(sn=>{out += XLSX.utils.sheet_to_csv(wb.Sheets[sn],{FS:' '})+'\n'}); return out;
+  }
+  return await file.text();
+}
+async function pdfToText(file, joinPages=false){
+  const buf = await file.arrayBuffer(); const pdf = await pdfjsLib.getDocument({data:buf}).promise; let pages=[];
+  for(let p=1;p<=pdf.numPages;p++){
+    const page=await pdf.getPage(p); const content=await page.getTextContent();
+    let text=content.items.map(i=>i.str).join(' '); pages.push({page:p,text});
+  }
+  return joinPages ? pages.map(x=>x.text).join('\n') : pages;
+}
+
+document.getElementById('baseFile').addEventListener('change', async e=>{
+  const file=e.target.files[0]; if(!file) return;
+  setBase('⏳ Lendo arquivo da base...', 'warnText');
+  try{ const txt=await fileToText(file); document.getElementById('baseText').value=txt; setBase('✅ Arquivo carregado. Agora clique em Processar base.', 'ok'); }
+  catch(err){ setBase('❌ Erro ao ler a base: '+err.message, 'bad'); }
+});
+
+function loadExample(){
+  document.getElementById('baseText').value='SD BM Q02/24 WILLIAM OLIVEIRA BARBOSA JUNIOR WILLIAM JUNIOR 54202 0051520389 DBM 5/M\n2º SGT BM Q10/08 FELIPE DE OLIVEIRA PACHECO PACHECO 44800 004350096-0 DBM 5/M\nSUBTEN BM Q00/98 JULIO CESAR DE ASSIS SANTOS DE ASSIS 24392 002660882-0 DBM 5/M';
+  processBase();
+}
+function processBase(){
+  const raw=document.getElementById('baseText').value||''; localStorage.setItem('radar_base_raw_v2', raw);
+  militares = parseMilitares(raw); localStorage.setItem('radar_militares_v2', JSON.stringify(militares)); updateBaseStatus();
+}
+function setBase(msg, cls){const el=document.getElementById('baseStatus');el.className='status '+cls;el.textContent=msg}
+function updateBaseStatus(){
+  if(!militares.length){setBase('⚠️ Nenhum militar identificado. Importe PDF/TXT/CSV/XLSX ou cole a relação.','warnText');return}
+  setBase('✅ Base processada: '+militares.length+' militares identificados e salvos neste aparelho.','ok');
+  document.getElementById('basePreview').innerHTML='<b>Primeiros registros:</b><br>'+militares.slice(0,5).map(m=>esc(`${m.posto} ${m.nome} | RG ${m.rg} | ID ${m.id} | ${m.unidade}`)).join('<br>');
+}
+function parseMilitares(raw){
+  const lines=raw.split(/\n|\r/).map(l=>l.replace(/\s+/g,' ').trim()).filter(l=>l.length>20);
+  const arr=[]; const seen=new Set();
+  for(let line of lines){
+    let L=line.replace(/[|;]/g,' ');
+    const n=norm(L); if(n.includes('POSTO QBMP')||n.includes('NOME N.GUERRA')) continue;
+    let unit=(L.match(/\b(DBM\s*\d+\s*\/\s*M|DBM\s*\d+\s*M|\d+º?\s*GBM|GBMUS|DGP|DGVP|QCG)\b/i)||[''])[0].replace(/\s+/g,' ');
+    const rgMatches=[...L.matchAll(/\b(\d{1,3}[\.]?\d{3}|\d{5})\b/g)].map(m=>m[1]);
+    const idMatches=[...L.matchAll(/\b(\d{7,10}[\-]?\d?|\d{3,4}[\.]?\d{3,4}[\-]?\d)\b/g)].map(m=>m[1]);
+    let rg='', id='';
+    for(const x of rgMatches){ const d=digits(x); if(d.length>=4 && d.length<=5){rg=x; break;} }
+    for(const x of idMatches){ const d=digits(x); if(d.length>=7 && d !== digits(rg)){id=x; break;} }
+    if(!rg && !id) continue;
+    let before=L; const posRg=rg?L.indexOf(rg):-1; const posId=id?L.indexOf(id):-1; const cut=[posRg,posId].filter(x=>x>=0).sort((a,b)=>a-b)[0]; if(cut>=0) before=L.slice(0,cut).trim();
+    let posto=(before.match(/^(1º TEN BM|2º TEN BM|TEN CEL BM|MAJ BM|CAP BM|SUBTEN BM|1º SGT BM|2º SGT BM|3º SGT BM|CB BM|SD BM)/i)||[''])[0];
+    let nome=before.replace(new RegExp('^'+posto,'i'),'').replace(/\bQ\d{2}\/?\d{2}\b/ig,'').replace(/\bQOA\/\d{2}\b/ig,'').trim();
+    nome=nome.replace(/\s+/g,' ');
+    if(!nome || nome.length<3) nome=before;
+    // remove provável duplicação do nome de guerra no final, sem prejudicar a busca
+    let tokens=norm(nome).split(' '); let guerra=tokens.slice(-2).join(' ');
+    const key=digits(rg)+'|'+digits(id)+'|'+norm(nome);
+    if(seen.has(key)) continue; seen.add(key);
+    arr.push({posto:posto||'', nome:nome, guerra:guerra, rg:rg, rgDigits:digits(rg), id:id, idDigits:digits(id), unidade:unit||document.getElementById('targetUnit').value||''});
+  }
+  return arr;
+}
+
+async function analyzeBulletin(){
+  const file=document.getElementById('pdfFile').files[0]; if(!file){alert('Selecione o PDF do boletim.');return}
+  if(!militares.length && !document.getElementById('baseText').value.trim()){alert('Primeiro importe ou cole a base de militares.');return}
+  if(!militares.length) processBase();
+  resultados=[]; renderResults(); document.getElementById('progress').classList.remove('hidden'); setBar(0); setPdf('⏳ Lendo boletim...','warnText');
+  try{
+    const pages=await pdfToText(file,false); const header=extractBoletimInfo(pages.map(p=>p.text).join(' ').slice(0,3000), file.name);
+    const unitWords=document.getElementById('targetWords').value.split(',').map(w=>norm(w)).filter(Boolean);
+    for(let i=0;i<pages.length;i++){
+      const page=pages[i]; const nt=norm(page.text); setBar(Math.round(((i+1)/pages.length)*100));
+      for(const m of militares){
+        const hit=scoreMilitary(nt,m,unitWords); if(hit.score>=50){
+          resultados.push({tipo:classify(nt), boletim:header, pagina:page.page, militar:m, score:hit.score, dados:hit.dados, trecho:snippet(page.text,m,unitWords)});
+        }
+      }
+      // ocorrências da unidade mesmo que militar não esteja na base
+      if(unitWords.some(w=>nt.includes(w))){
+        const tre=snippetUnit(page.text, unitWords);
+        if(tre && !resultados.some(r=>r.pagina===page.page && r.trecho===tre)) resultados.push({tipo:classify(nt), boletim:header, pagina:page.page, militar:{nome:'Ocorrência da unidade',rg:'',id:'',unidade:document.getElementById('targetUnit').value}, score:35, dados:['Unidade citada'], trecho:tre});
+      }
+    }
+    resultados.sort((a,b)=>b.score-a.score||a.pagina-b.pagina);
+    setPdf('✅ Análise concluída: '+resultados.length+' ocorrência(s) encontrada(s).','ok'); renderResults();
+  }catch(err){setPdf('❌ Erro ao analisar PDF: '+err.message,'bad')}
+}
+function setPdf(msg,cls){const el=document.getElementById('pdfStatus');el.className='status '+cls;el.textContent=msg}
+function setBar(v){document.getElementById('bar').style.width=v+'%'}
+function scoreMilitary(nt,m,unitWords){let score=0,dados=[];
+  if(m.idDigits && nt.includes(m.idDigits)){score+=70;dados.push('ID funcional')}
+  if(m.rgDigits && (nt.includes(m.rgDigits)||nt.includes(m.rgDigits.replace(/^0+/,'')))){score+=60;dados.push('RG')}
+  const nomeN=norm(m.nome); const nameTokens=nomeN.split(' ').filter(t=>t.length>2);
+  if(nomeN.length>8 && nt.includes(nomeN)){score+=35;dados.push('Nome completo')}
+  else if(nameTokens.length>=2){let c=nameTokens.filter(t=>nt.includes(t)).length; if(c>=Math.min(3,nameTokens.length)){score+=20;dados.push('Partes do nome')}}
+  if(m.guerra && m.guerra.length>3 && nt.includes(norm(m.guerra))){score+=15;dados.push('Nome de guerra')}
+  if(unitWords.some(w=>nt.includes(w))){score+=10;dados.push('Unidade alvo')}
+  return {score,dados};
+}
+function extractBoletimInfo(text, filename){
+  const t=text.replace(/\s+/g,' '); const m=t.match(/BOLETIM[^ºN]*[Nº°]\s*([0-9]{1,4}).{0,40}?(\d{1,2}\/?\d{1,2}\/?\d{2,4}|\d{1,2}\s+DE\s+[A-ZÇ]+\s+DE\s+\d{4})/i);
+  if(m) return 'Boletim nº '+m[1]+' de '+m[2];
+  const f=filename.match(/BOL\s*0?([0-9]{2,4})/i); return f?'Boletim nº '+f[1]:filename;
+}
+function classify(nt){
+  if(nt.includes('MOVIMENTACAO')) return 'Movimentação'; if(nt.includes('FERIAS')) return 'Férias'; if(nt.includes('LICENCA')) return 'Licença'; if(nt.includes('JUNTA')||nt.includes('SAUDE')) return 'Saúde'; if(nt.includes('SINDICANCIA')||nt.includes('DISCIPLINA')) return 'Justiça/Disciplina'; if(nt.includes('CURSO')) return 'Curso/Instrução'; return 'Publicação';
+}
+function snippet(text,m,unitWords){
+  const plain=text.replace(/\s+/g,' '); const keys=[m.idDigits,m.rgDigits,norm(m.nome).split(' ')[0],...unitWords].filter(Boolean);
+  let idx=-1; const nplain=norm(plain); for(const k of keys){idx=nplain.indexOf(norm(k)); if(idx>=0) break;}
+  if(idx<0) idx=0; return plain.slice(Math.max(0,idx-220), Math.min(plain.length,idx+420)).trim();
+}
+function snippetUnit(text,unitWords){const plain=text.replace(/\s+/g,' '); const nplain=norm(plain); let idx=-1; for(const k of unitWords){idx=nplain.indexOf(k); if(idx>=0) break;} if(idx<0)return ''; return plain.slice(Math.max(0,idx-260), Math.min(plain.length,idx+520)).trim();}
+function renderResults(){
+  document.getElementById('count').textContent=resultados.length; const box=document.getElementById('results'); if(!resultados.length){box.innerHTML='<div class="small">Nenhum resultado ainda.</div>';return}
+  box.innerHTML=resultados.map((r,i)=>{const cls=r.score>=80?'high':r.score>=50?'med':''; const pill=r.score>=80?'green':r.score>=50?'warn':'red';
+    return `<div class="result ${cls}"><h3>${esc(r.militar.nome)}</h3><span class="pill ${pill}">${r.score>=80?'Alta':r.score>=50?'Média':'Baixa'} confiança</span><span class="pill">${esc(r.tipo)}</span><span class="pill">Página ${r.pagina}</span><span class="pill">${esc(r.boletim)}</span><p><b>Dados encontrados:</b> ${esc((r.dados||[]).join(', ')||'Unidade citada')}</p><p><b>RG:</b> ${esc(r.militar.rg||'-')} &nbsp; <b>ID:</b> ${esc(r.militar.id||'-')} &nbsp; <b>Unidade:</b> ${esc(r.militar.unidade||'-')}</p><div class="snippet">${esc(r.trecho)}</div><button class="btn green" style="margin-top:10px" onclick="copyOne(${i})">Copiar WhatsApp</button></div>`}).join('');
+}
+function reportText(){return resultados.map(r=>`🚨 ${r.tipo}\n${r.militar.nome}${r.militar.rg?`, RG ${r.militar.rg}`:''}${r.militar.id?`, ID ${r.militar.id}`:''}\n📄 ${r.boletim}\n📌 Página ${r.pagina}\n🔎 Dados: ${(r.dados||[]).join(', ')||'Unidade citada'}\nTrecho: ${r.trecho}`).join('\n\n----------------\n\n')}
+async function copyReport(){if(!resultados.length)return alert('Nenhum resultado.'); await navigator.clipboard.writeText(reportText()); alert('Relatório copiado.')}
+async function copyOne(i){const r=resultados[i]; await navigator.clipboard.writeText(`🚨 ${r.tipo}\n${r.militar.nome}${r.militar.rg?`, RG ${r.militar.rg}`:''}\n📄 ${r.boletim}\n📌 Página ${r.pagina}\nTrecho: ${r.trecho}`); alert('Mensagem copiada.')}
+function exportCSV(){if(!resultados.length)return alert('Nenhum resultado.'); const rows=[['Militar','RG','ID','Unidade','Tipo','Boletim','Pagina','Confianca','Dados','Trecho'],...resultados.map(r=>[r.militar.nome,r.militar.rg,r.militar.id,r.militar.unidade,r.tipo,r.boletim,r.pagina,r.score,(r.dados||[]).join('|'),r.trecho])]; const csv=rows.map(row=>row.map(x=>'"'+String(x||'').replace(/"/g,'""')+'"').join(';')).join('\n'); const blob=new Blob([csv],{type:'text/csv;charset=utf-8'}); const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='resultado_radar_boletins.csv'; a.click();}
+function clearAll(){resultados=[];renderResults();document.getElementById('pdfStatus').textContent='';}
+</script>
+</body>
+</html>
