@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Radar Operacional de Boletins - DBM 5/M</title>
+<title>Radar Operacional de Boletins - DBM 5/M - Central</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <style>
@@ -34,7 +34,7 @@ textarea{min-height:105px;font-family:ui-monospace,SFMono-Regular,Consolas,monos
 <body>
 <header>
   <h1>🚒 Radar Operacional de Boletins</h1>
-  <p>Localiza militares da DBM 5/M em boletins PDF, analisa lote mensal, mostra página, trecho e abre o PDF no ponto encontrado.</p>
+  <p>Central operacional com análise por pasta, lote mensal, histórico local, página, trecho e abertura do PDF no ponto encontrado.</p>
 </header>
 
 <div class="wrap">
@@ -59,17 +59,25 @@ textarea{min-height:105px;font-family:ui-monospace,SFMono-Regular,Consolas,monos
   </section>
 
   <section class="card">
-    <h2>2. Boletins PDF</h2>
-    <p class="muted">Selecione 1 PDF ou vários PDFs do mês inteiro. Tudo roda localmente no navegador.</p>
+    <h2>2. Central de boletins PDF</h2>
+    <p class="muted">Use <b>Selecionar boletins</b> para poucos arquivos ou <b>Selecionar pasta</b> para um mês inteiro. O histórico das ocorrências fica salvo neste aparelho.</p>
     <div class="row">
       <input id="pdfFiles" type="file" accept="application/pdf,.pdf" multiple>
-      <button class="primary" onclick="analyzePdfs()">Analisar lote</button>
+      <input id="pdfFolder" type="file" accept="application/pdf,.pdf" webkitdirectory directory multiple title="Selecionar pasta de boletins">
+      <button class="primary" onclick="analyzePdfs()">Analisar novos</button>
     </div>
+    <div class="small" style="margin-top:6px">No Android, caso o botão de pasta não apareça corretamente, selecione vários PDFs pelo botão normal.</div>
     <div id="fileList" class="fileList" style="margin-top:10px">Nenhum boletim selecionado.</div>
+    <div class="actions" style="margin-top:10px">
+      <button class="blue" onclick="loadHistory()">📚 Carregar histórico local</button>
+      <button class="dark" onclick="saveHistory()">💾 Salvar histórico</button>
+      <button class="gray" onclick="clearHistory()">🗑️ Apagar histórico</button>
+    </div>
     <label style="display:flex;gap:10px;align-items:flex-start;margin-top:10px;background:#0b1220;border:1px solid var(--line);border-radius:12px;padding:10px;color:#cbd5e1">
       <input id="ignoreScales" type="checkbox" checked style="width:auto;margin-top:3px">
       <span><b>Ignorar escalas de serviço</b><br><span class="small">Evita alertas falsos quando a escala da unidade lista quase todos os militares.</span></span>
     </label>
+    <div id="historyStatus" class="status small"></div>
     <div id="pdfStatus" class="status"></div>
     <div class="progress"><div id="bar" class="bar"></div></div>
   </section>
@@ -193,6 +201,7 @@ const FIXED_BASE = [
 ];
 
 let militares=[], results=[], fileStore={}, viewerDoc=null, viewerFileKey='', currentPage=1;
+const HISTORY_KEY='radar_boletins_dbm5_history_v1';
 
 function norm(s){return String(s||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toUpperCase().replace(/[º°]/g,'º').replace(/\s+/g,' ').trim()}
 function digits(s){return String(s||'').replace(/\D/g,'')}
@@ -200,7 +209,8 @@ function esc(s){return String(s||'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt
 function prep(m){return {posto:norm(m.posto),qbmp:norm(m.qbmp),nome:norm(m.nome),guerra:norm(m.guerra),rg:digits(m.rg),id:digits(m.id),unidade:norm(m.unidade||'DBM 5/M')}}
 function init(){militares=FIXED_BASE.map(prep); renderBase(); renderResults(); bindFileList();}
 function renderBase(){document.getElementById('baseStatus').textContent=`✅ Base oficial DBM 5/M carregada: ${militares.length} militares.`;document.getElementById('basePreview').innerHTML=militares.slice(0,16).map(m=>`${m.posto} ${m.qbmp} ${m.nome} (${m.guerra}) | RG ${m.rg} | ID ${m.id}`).join('<br>')+(militares.length>16?'<br>...':'')}
-function bindFileList(){document.getElementById('pdfFiles').addEventListener('change',()=>{const fs=[...document.getElementById('pdfFiles').files];document.getElementById('fileList').innerHTML=fs.length?fs.map((f,i)=>`${i+1}. ${esc(f.name)} <span class="small">(${Math.round(f.size/1024)} KB)</span>`).join('<br>'):'Nenhum boletim selecionado.'})}
+function selectedPdfFiles(){const a=[...document.getElementById('pdfFiles').files]; const b=[...document.getElementById('pdfFolder').files].filter(f=>/\.pdf$/i.test(f.name)||f.type==='application/pdf'); const map=new Map(); [...a,...b].forEach(f=>map.set(f.name+'_'+f.size+'_'+f.lastModified,f)); return [...map.values()]}
+function bindFileList(){const upd=()=>{const fs=selectedPdfFiles();document.getElementById('fileList').innerHTML=fs.length?fs.map((f,i)=>`${i+1}. ${esc(f.webkitRelativePath||f.name)} <span class="small">(${Math.round(f.size/1024)} KB)</span>`).join('<br>'):'Nenhum boletim selecionado.'};document.getElementById('pdfFiles').addEventListener('change',upd);document.getElementById('pdfFolder').addEventListener('change',upd)}
 function loadExample(){document.getElementById('baseText').value='SUBTEN BM;Q00/98;MILITAR TESTE DA SILVA;TESTE;99999;001234567-8;DBM 5/M'}
 async function fileToText(file){const n=file.name.toLowerCase(); if(n.endsWith('.pdf')) return await readPdfText(file); if(n.endsWith('.xlsx')||n.endsWith('.xls')){const buf=await file.arrayBuffer();const wb=XLSX.read(buf,{type:'array'});return wb.SheetNames.map(sn=>XLSX.utils.sheet_to_csv(wb.Sheets[sn],{FS:';'})).join('\n')} return await file.text();}
 async function readPdfText(file){const arr=await file.arrayBuffer();const doc=await pdfjsLib.getDocument({data:arr}).promise;let out=[];for(let p=1;p<=doc.numPages;p++){const page=await doc.getPage(p);const tc=await page.getTextContent();out.push(tc.items.map(i=>i.str).join(' '));}return out.join('\n')}
@@ -300,19 +310,19 @@ function findMatches(pageText,pageNo,fileKey,boletim,fileName){
   }
   return out
 }
-async function analyzePdfs(){const files=[...document.getElementById('pdfFiles').files]; if(!files.length){alert('Selecione um ou mais boletins PDF.');return} if(!militares.length){alert('Base vazia.');return}
-  results=[]; fileStore={}; skippedScalePages=0; updateStats(); renderResults(); const st=document.getElementById('pdfStatus'); st.className='status'; st.textContent='Iniciando análise...'; let totalPages=0, done=0;
-  for(const f of files){const arr=await f.arrayBuffer(); const key=`f${Object.keys(fileStore).length}`; fileStore[key]={name:f.name,bytes:arr}; const doc=await pdfjsLib.getDocument({data:arr.slice(0)}).promise; fileStore[key].pages=doc.numPages; totalPages+=doc.numPages}
+async function analyzePdfs(){const files=selectedPdfFiles(); if(!files.length){alert('Selecione um ou mais boletins PDF ou uma pasta.');return} if(!militares.length){alert('Base vazia.');return}
+  const previous=[...results]; fileStore={}; skippedScalePages=0; updateStats(); renderResults(); const st=document.getElementById('pdfStatus'); st.className='status'; st.textContent='Iniciando análise...'; let totalPages=0, done=0; const alreadyFiles=new Set(previous.map(r=>r.fileSig).filter(Boolean)); const newResults=[];
+  for(const f of files){const sig=f.name+'_'+f.size+'_'+f.lastModified; if(alreadyFiles.has(sig)) continue; const arr=await f.arrayBuffer(); const key=`f${Object.keys(fileStore).length}`; fileStore[key]={name:f.name,path:f.webkitRelativePath||f.name,size:f.size,lastModified:f.lastModified,sig,bytes:arr}; const doc=await pdfjsLib.getDocument({data:arr.slice(0)}).promise; fileStore[key].pages=doc.numPages; totalPages+=doc.numPages}
   for(const [key,info] of Object.entries(fileStore)){const doc=await pdfjsLib.getDocument({data:info.bytes.slice(0)}).promise; let first=''; let boletim='-';
     for(let p=1;p<=doc.numPages;p++){const page=await doc.getPage(p); const tc=await page.getTextContent(); const txt=tc.items.map(i=>i.str).join(' '); if(p<=2){first+=' '+txt; boletim=extractBoletimName(info.name,first)}
       const ignoreScales = document.getElementById('ignoreScales')?.checked;
       if(ignoreScales && isScaleServicePage(txt)){skippedScalePages++;}
-      else {results.push(...findMatches(txt,p,key,boletim,info.name));}
+      else {const found=findMatches(txt,p,key,boletim,info.name); found.forEach(r=>{r.fileSig=info.sig;r.filePath=info.path}); newResults.push(...found);}
       done++; document.getElementById('bar').style.width=Math.round(done/totalPages*100)+'%'; st.textContent=`Analisando ${info.name} — página ${p}/${doc.numPages}`; await new Promise(r=>setTimeout(r,0));}
   }
   // dedupe per file+rg+page+type
-  const map=new Map(); results.forEach(r=>{const k=`${r.fileKey}-${r.militar.rg}-${r.page}-${r.tipo}`; if(!map.has(k)||map.get(k).score<r.score)map.set(k,r)}); results=[...map.values()].sort((a,b)=>a.fileName.localeCompare(b.fileName)||a.page-b.page||b.score-a.score);
-  st.className='status ok'; st.textContent=`✅ Análise concluída: ${files.length} boletim(ns), ${results.length} ocorrência(s). ${skippedScalePages? skippedScalePages+' página(s) de escala ignorada(s).':''}`; updateTypeOptions(); updateStats(files.length); renderResults();
+  const map=new Map(); [...previous,...newResults].forEach(r=>{const k=`${r.fileSig||r.fileKey}-${r.militar.rg}-${r.page}-${r.tipo}`; if(!map.has(k)||map.get(k).score<r.score)map.set(k,r)}); results=[...map.values()].sort((a,b)=>a.fileName.localeCompare(b.fileName)||a.page-b.page||b.score-a.score);
+  st.className='status ok'; st.textContent=`✅ Análise concluída: ${Object.keys(fileStore).length} novo(s) boletim(ns), ${newResults.length} nova(s) ocorrência(s). Total no painel: ${results.length}. ${skippedScalePages? skippedScalePages+' página(s) de escala ignorada(s).':''}`; updateTypeOptions(); updateStats(files.length); renderResults(); saveHistory(false);
 }
 function conf(score){return score>=120?['Alta confiança','high']:score>=85?['Média confiança','med']:['Baixa confiança','low']}
 function passFilters(r){const q=norm(document.getElementById('searchFilter').value); const ty=document.getElementById('typeFilter').value; if(ty&&r.tipo!==ty)return false; if(!q)return true; return [r.militar.nome,r.militar.guerra,r.militar.rg,r.militar.id,r.fileName,r.boletim,r.tipo].some(x=>norm(x).includes(q))}
@@ -337,7 +347,13 @@ function msg(r){let m=r.militar;return `🚨 ${r.tipo}\n\n${m.posto} ${m.qbmp} $
 async function copyWhats(id){const r=results.find(x=>x.id===id); if(r){await navigator.clipboard.writeText(msg(r)); alert('Mensagem copiada.')}}
 async function copyReport(){const fr=filtered(); await navigator.clipboard.writeText(fr.map(msg).join('\n\n----------------\n\n')); alert('Relatório copiado.')}
 function exportCsv(){const fr=filtered();let csv='MILITAR;NOME_GUERRA;RG;ID;BOLETIM;ARQUIVO;PAGINA;TIPO;CONFIANCA;DADOS;TRECHO\n'+fr.map(r=>{let [c]=conf(r.score),m=r.militar;return `"${m.nome}";"${m.guerra}";"${m.rg}";"${m.id}";"${r.boletim}";"${r.fileName}";"${r.page}";"${r.tipo}";"${c}";"${r.found.join(', ')}";"${r.snippet.replace(/"/g,'""')}"`}).join('\n');let blob=new Blob([csv],{type:'text/csv;charset=utf-8'});let a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='radar_boletins_resultado.csv';a.click()}
-function clearResults(){results=[];fileStore={};skippedScalePages=0;document.getElementById('pdfFiles').value='';document.getElementById('fileList').innerHTML='Nenhum boletim selecionado.';document.getElementById('pdfStatus').textContent='';document.getElementById('bar').style.width='0';updateTypeOptions();updateStats(0);renderResults()}
+function clearResults(){results=[];fileStore={};skippedScalePages=0;document.getElementById('pdfFiles').value='';document.getElementById('pdfFolder').value='';document.getElementById('fileList').innerHTML='Nenhum boletim selecionado.';document.getElementById('pdfStatus').textContent='';document.getElementById('bar').style.width='0';updateTypeOptions();updateStats(0);renderResults()}
+
+function serializableResult(r){return {id:r.id,fileKey:'historico',fileName:r.fileName,filePath:r.filePath||r.fileName,fileSig:r.fileSig||'',boletim:r.boletim,page:r.page,tipo:r.tipo,score:r.score,found:r.found,snippet:r.snippet,militar:r.militar}}
+function saveHistory(show=true){try{const payload={savedAt:new Date().toISOString(),results:results.map(serializableResult)};localStorage.setItem(HISTORY_KEY,JSON.stringify(payload));document.getElementById('historyStatus').textContent='💾 Histórico local salvo: '+results.length+' ocorrência(s).';document.getElementById('historyStatus').className='status ok small';if(show)alert('Histórico salvo neste aparelho.')}catch(e){alert('Não foi possível salvar histórico: '+e.message)}}
+function loadHistory(){try{const raw=localStorage.getItem(HISTORY_KEY);if(!raw){alert('Ainda não há histórico salvo neste aparelho.');return}const payload=JSON.parse(raw);results=(payload.results||[]).map((r,i)=>({...r,id:r.id||('hist-'+i),fileKey:'historico'}));updateTypeOptions();updateStats();renderResults();document.getElementById('historyStatus').textContent='📚 Histórico carregado: '+results.length+' ocorrência(s) salvas.';document.getElementById('historyStatus').className='status ok small'}catch(e){alert('Erro ao carregar histórico: '+e.message)}}
+function clearHistory(){if(confirm('Apagar o histórico local salvo neste aparelho?')){localStorage.removeItem(HISTORY_KEY);document.getElementById('historyStatus').textContent='🗑️ Histórico local apagado.';document.getElementById('historyStatus').className='status warn small'}}
+
 init();
 </script>
 </body>
