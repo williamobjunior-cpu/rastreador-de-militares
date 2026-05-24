@@ -2,201 +2,155 @@
 <html lang="pt-BR">
 <head>
 <meta charset="utf-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Radar de Boletins - DBM V6</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Radar de Boletins - DBM 5/M</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <style>
-:root{--red:#8b1e1e;--dark:#172033;--green:#2f7d45;--bg:#f2f2f2;--muted:#667085;--line:#e7e7e7}
-*{box-sizing:border-box} body{margin:0;background:var(--bg);font-family:Arial,Helvetica,sans-serif;color:#141722} header{background:linear-gradient(90deg,#8b1e1e,#6f1717);color:#fff;padding:22px 18px;box-shadow:0 2px 12px #0002} header h1{margin:0;font-size:28px} header p{margin:6px 0 0;font-size:15px;opacity:.95}.wrap{max-width:1050px;margin:18px auto;padding:0 14px}.card{background:#fff;border-radius:20px;padding:20px;margin:18px 0;box-shadow:0 10px 30px #0001}.row{display:flex;gap:12px;align-items:center;flex-wrap:wrap}h2{margin:0 0 12px;font-size:24px}.hint{color:#5d6370;line-height:1.45}.file{border:1px solid var(--line);border-radius:10px;padding:12px;flex:1;min-width:260px}button{border:0;border-radius:10px;padding:14px 20px;font-weight:800;font-size:16px;cursor:pointer}button.primary{background:var(--red);color:white}button.dark{background:var(--dark);color:white}button.green{background:var(--green);color:white}button.gray{background:#e5e7eb}textarea,input{width:100%;border:1px solid var(--line);border-radius:10px;padding:13px;font:15px Arial;margin:8px 0}textarea{min-height:130px;font-family:ui-monospace,Consolas,monospace;white-space:pre}.ok{color:var(--green);font-weight:800}.warn{color:#9a5b00;font-weight:800}.bad{color:#a31616;font-weight:800}.small{font-size:13px;color:#667085}.results{display:grid;gap:14px}.res{border:1px solid #eee;border-left:7px solid var(--red);border-radius:12px;padding:16px;background:#fff}.res h3{margin:0 0 10px;font-size:20px}.badge{display:inline-block;border-radius:999px;padding:6px 10px;font-size:13px;font-weight:800;margin:3px;background:#eef2ff;color:#393f95}.badge.high{background:#d8f2df;color:#16602b}.badge.med{background:#fff3c4;color:#8a5a00}.badge.low{background:#ffe0e0;color:#8d1717}.trecho{background:#f7f7f8;padding:14px;border-radius:10px;margin:10px 0;line-height:1.45;white-space:pre-wrap}.actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px}.viewer{position:fixed;inset:0;background:#000b;z-index:50;display:none;align-items:flex-start;justify-content:center;padding:10px;overflow:auto}.viewerBox{background:#fff;border-radius:14px;width:min(100%,950px);padding:12px}.viewerTop{display:flex;justify-content:space-between;gap:8px;align-items:center;margin-bottom:8px}.viewer canvas{width:100%;height:auto;border:1px solid #ddd;border-radius:8px}.count{background:#111827;color:white;border-radius:999px;padding:3px 9px;font-size:14px}.progress{height:12px;background:#eee;border-radius:999px;overflow:hidden;margin-top:10px}.bar{height:100%;width:0;background:var(--red);transition:.2s}.mark{background:#fff59d;padding:1px 3px;border-radius:3px;font-weight:800}@media(max-width:650px){header h1{font-size:24px}.card{padding:16px}button{width:100%}.actions button{width:auto;flex:1}.row{align-items:stretch}}
+:root{--red:#84221f;--dark:#121827;--green:#3f7f49;--bg:#f3f4f6;--muted:#6b7280;--line:#e5e7eb;--soft:#fff;--yellow:#fff2c2;--blue:#eef0ff}
+*{box-sizing:border-box}body{margin:0;font-family:Arial,Helvetica,sans-serif;background:var(--bg);color:#1f2937}header{background:linear-gradient(135deg,#7d1e1c,#9b2b26);color:white;padding:24px 18px;box-shadow:0 6px 18px rgba(0,0,0,.18)}header h1{margin:0;font-size:30px}header p{margin:8px 0 0;font-size:16px;opacity:.95}.wrap{max-width:1100px;margin:22px auto;padding:0 16px}.card{background:#fff;border-radius:22px;padding:24px;margin-bottom:22px;box-shadow:0 12px 35px rgba(0,0,0,.08)}h2{margin:0 0 16px;font-size:26px}.muted{color:var(--muted);line-height:1.45}.row{display:flex;gap:14px;align-items:center;flex-wrap:wrap}.row>*{flex:1}input,textarea,select{width:100%;border:1px solid var(--line);border-radius:10px;padding:13px 14px;font-size:16px;background:#fff}textarea{min-height:120px;font-family:ui-monospace,SFMono-Regular,Consolas,monospace}button{border:0;border-radius:10px;padding:14px 20px;font-weight:700;font-size:16px;cursor:pointer;white-space:nowrap}button.primary{background:var(--red);color:white}button.dark{background:var(--dark);color:white}button.green{background:var(--green);color:white}button.gray{background:#e5e7eb;color:#111827}button:disabled{opacity:.45;cursor:not-allowed}.status{margin-top:12px;font-weight:700}.ok{color:#3f7f49}.warn{color:#9a6b13}.err{color:#a32323}.pill{display:inline-block;padding:7px 11px;border-radius:999px;background:var(--blue);color:#343b84;font-size:13px;font-weight:700;margin:3px}.pill.red{background:#ffe3df;color:#8a201b}.pill.yellow{background:var(--yellow);color:#836000}.result{border:1px solid var(--line);border-left:7px solid var(--red);border-radius:16px;padding:18px 18px 16px;margin:16px 0;background:white}.result h3{font-size:24px;margin:0 0 8px;color:#111827}.snippet{background:#f5f5f5;border-radius:12px;padding:14px;line-height:1.45;margin:14px 0;white-space:pre-wrap;max-height:260px;overflow:auto}.highlight{background:#fff36b;font-weight:800;padding:0 2px;border-radius:3px}.progress{height:14px;background:#e9e9e9;border-radius:999px;overflow:hidden;margin-top:16px}.bar{height:100%;width:0;background:var(--red);transition:width .2s}.small{font-size:13px;color:#6b7280}.baseBox{background:#f9fafb;border:1px solid var(--line);border-radius:14px;padding:14px;margin-top:12px}.baseList{max-height:180px;overflow:auto;font-size:13px;line-height:1.4;color:#4b5563}.pdfViewer{display:none;margin-top:20px;border-top:1px solid var(--line);padding-top:16px}.pdfTop{display:flex;gap:10px;align-items:center;justify-content:space-between;flex-wrap:wrap;margin-bottom:12px}.canvasWrap{overflow:auto;background:#333;border-radius:12px;padding:10px;text-align:center}canvas{max-width:100%;height:auto;background:white}.dangerBox{background:#fff7ed;border:1px solid #fed7aa;color:#9a3412;border-radius:12px;padding:12px;margin-top:12px}.grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}@media(max-width:700px){header h1{font-size:26px}.card{padding:20px 18px}.row{display:block}.row>*{margin-bottom:10px}.grid2{grid-template-columns:1fr}button{width:100%;margin:4px 0}.result h3{font-size:21px}}
 </style>
 </head>
 <body>
-<header><h1>🚒 Radar de Boletins</h1><p>Localiza militares e publicações da unidade, mostra boletim, página e trecho, e abre a página do PDF.</p></header>
+<header><h1>🚒 Radar de Boletins</h1><p>Base fixa DBM 5/M + opção de importar reforço. Localiza militares no boletim, mostra página, trecho e abre a página do PDF.</p></header>
 <div class="wrap">
-  <section class="card">
-    <h2>1. Base de militares</h2>
-    <p class="hint">Importe a relação nominal em <b>PDF, TXT, CSV ou XLSX</b>. O app tenta identificar RG, ID funcional, nome e unidade. Nada é enviado para servidor.</p>
-    <div class="row">
-      <input class="file" type="file" id="baseFile" accept=".pdf,.txt,.csv,.xlsx,.xls" />
-      <button class="dark" onclick="loadExample()">Carregar exemplo</button>
-      <button class="primary" onclick="processBase()">Processar base</button>
-    </div>
-    <textarea id="baseText" placeholder="Cole aqui a relação nominal caso prefira..."></textarea>
-    <div class="row"><input id="unitMain" value="DBM 5/M" placeholder="Unidade principal"/><input id="unitAliases" value="DBM 5/M, DBM 5M, Sepetiba" placeholder="Apelidos da unidade separados por vírgula"/></div>
-    <div id="baseStatus" class="warn">⚠️ Nenhum militar identificado.</div>
-    <div id="basePreview" class="small"></div>
-  </section>
-
-  <section class="card">
-    <h2>2. Boletim PDF</h2>
-    <p class="hint">Selecione o PDF do boletim. A análise é página por página.</p>
-    <div class="row"><input class="file" type="file" id="pdfFile" accept=".pdf"/><button class="primary" onclick="analyzePdf()">Analisar boletim</button></div>
-    <div id="pdfStatus" class="small"></div><div class="progress"><div id="bar" class="bar"></div></div>
-  </section>
-
-  <section class="card">
-    <div class="row" style="justify-content:space-between"><h2>3. Resultados <span id="count" class="count">0</span></h2><div class="row"><button class="dark" onclick="copyReport()">Copiar relatório</button><button class="green" onclick="exportCSV()">Exportar CSV</button><button class="gray" onclick="clearResults()">Limpar</button></div></div>
-    <div id="results" class="results"></div>
-  </section>
+<section class="card">
+<h2>1. Base de militares</h2>
+<p class="muted"><b>A base oficial DBM 5/M já vem fixa no app.</b> Use a importação abaixo apenas para adicionar/atualizar militares depois.</p>
+<div id="baseStatus" class="status ok"></div>
+<div class="baseBox"><b>Primeiros registros carregados:</b><div id="basePreview" class="baseList"></div></div>
+<div class="dangerBox"><b>Opcional:</b> importar base extra em TXT/CSV/XLSX ou PDF. Se não importar nada, o app usa a base fixa.</div>
+<div class="row" style="margin-top:14px">
+<input id="baseFile" type="file" accept=".txt,.csv,.xlsx,.xls,.pdf,text/plain,text/csv,application/pdf" />
+<button class="dark" onclick="loadExample()">Carregar exemplo</button>
+<button class="primary" onclick="processExtraBase()">Adicionar/Atualizar base</button>
 </div>
-
-<div id="viewer" class="viewer"><div class="viewerBox"><div class="viewerTop"><b id="viewerTitle">Página</b><div class="row"><button class="gray" onclick="prevPage()">◀</button><button class="gray" onclick="nextPage()">▶</button><button class="primary" onclick="closeViewer()">Fechar</button></div></div><canvas id="pdfCanvas"></canvas></div></div>
-
+<textarea id="baseText" placeholder="Cole aqui militares extras, se precisar... Ex: SUBTEN BM Q00/98 NOME COMPLETO NOME GUERRA 24392 002660882-0 DBM 5/M"></textarea>
+</section>
+<section class="card">
+<h2>2. Boletim PDF</h2>
+<p class="muted">Selecione o PDF do boletim. A análise é feita página por página no seu aparelho.</p>
+<div class="row">
+<input id="pdfFile" type="file" accept="application/pdf,.pdf" />
+<button class="primary" onclick="analyzePdf()">Analisar boletim</button>
+</div>
+<div id="pdfStatus" class="status"></div>
+<div class="progress"><div id="bar" class="bar"></div></div>
+<div id="viewer" class="pdfViewer">
+<div class="pdfTop"><b id="viewerTitle">Página</b><div><button class="gray" onclick="prevPage()">◀ Anterior</button><button class="gray" onclick="nextPage()">Próxima ▶</button></div></div>
+<div class="canvasWrap"><canvas id="pdfCanvas"></canvas></div>
+</div>
+</section>
+<section class="card">
+<div class="row"><h2>3. Resultados <span id="count" class="pill" style="background:#111827;color:white">0</span></h2><button class="dark" onclick="copyReport()">Copiar relatório</button><button class="green" onclick="exportCsv()">Exportar CSV</button><button class="gray" onclick="clearResults()">Limpar</button></div>
+<div id="results"></div>
+</section>
+</div>
 <script>
 pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
-let militares=[], results=[], pdfDoc=null, currentPage=1, pdfFileData=null;
-const $=id=>document.getElementById(id);
-function norm(s){return (s||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toUpperCase().replace(/\s+/g,' ').trim()}
+const FIXED_BASE = [
+{posto:'1º TEN BM',qbmp:'QOA/90',nome:'ANDERSON MARIANO DE SOUZA',guerra:'MARIANO',rg:'12848',id:'002656114-0',unidade:'DBM 5/M'},
+{posto:'SUBTEN BM',qbmp:'Q06/08',nome:'ANA CARLA AMARAL DE OLIVEIRA MUNIZ',guerra:'ANA CARLA',rg:'42714',id:'004340673-4',unidade:'DBM 5/M'},
+{posto:'SUBTEN BM',qbmp:'Q00/97',nome:'ANDRE LUIS ALVES DOS SANTOS',guerra:'LUIS ALVES',rg:'21534',id:'000612531-0',unidade:'DBM 5/M'},
+{posto:'SUBTEN BM',qbmp:'Q00/98',nome:'ALEXANDRE APOLINARIO RAMOS',guerra:'APOLINARIO',rg:'23596',id:'002585085-7',unidade:'DBM 5/M'},
+{posto:'SUBTEN BM',qbmp:'Q10/98',nome:'ANDERSON PFALTZGRAFF FONSECA',guerra:'FONSECA',rg:'24531',id:'002645006-2',unidade:'DBM 5/M'},
+{posto:'SUBTEN BM',qbmp:'Q06/00',nome:'ALEXANDRA OLIVEIRA DO COUTO',guerra:'ALEXANDRA COUTO',rg:'27072',id:'000886328-8',unidade:'DBM 5/M'},
+{posto:'2º SGT BM',qbmp:'Q06/08',nome:'ANDELINO CARLOS DE LIMA',guerra:'ANDELINO',rg:'43003',id:'004340678-5',unidade:'DBM 5/M'},
+{posto:'2º SGT BM',qbmp:'Q02/08',nome:'ANTONIO JOSE OLIVEIRA SILVA',guerra:'JOSE OLIVEIRA',rg:'43532',id:'004341487-7',unidade:'DBM 5/M'},
+{posto:'2º SGT BM',qbmp:'Q00/08',nome:'CARLOS RENAN DE OLIVEIRA RODRIGUES',guerra:'RENAN',rg:'44419',id:'004343795-8',unidade:'DBM 5/M'},
+{posto:'SUBTEN BM',qbmp:'Q00/97',nome:'DJALMA DO NASCIMENTO ALVES',guerra:'DJALMA',rg:'20532',id:'000612161-6',unidade:'DBM 5/M'},
+{posto:'SUBTEN BM',qbmp:'Q08/98',nome:'DANIEL GONÇALVES LEMOS',guerra:'LEMOS',rg:'23763',id:'002613806-9',unidade:'DBM 5/M'},
+{posto:'SUBTEN BM',qbmp:'Q10/98',nome:'DANIEL ALVES DA SILVA',guerra:'ALVES',rg:'24277',id:'002657725-9',unidade:'DBM 5/M'},
+{posto:'SD BM',qbmp:'Q08/24',nome:'DAVI KENNEDY VITOR DE LIMA',guerra:'KENNEDY',rg:'54403',id:'0051508540',unidade:'DBM 5/M'},
+{posto:'SUBTEN BM',qbmp:'Q06/02',nome:'ELIANE FRANÇA DA SILVA',guerra:'ELIANE FRANÇA',rg:'30864',id:'004142488-3',unidade:'DBM 5/M'},
+{posto:'SUBTEN BM',qbmp:'Q00/90',nome:'FÁBIO ROBERTO SARGO DO CARMO',guerra:'FÁBIO',rg:'12706',id:'002584924-7',unidade:'DBM 5/M'},
+{posto:'SUBTEN BM',qbmp:'Q00/98',nome:'FABIO MACIEL DO CARMO',guerra:'DO CARMO',rg:'23853',id:'002652821-5',unidade:'DBM 5/M'},
+{posto:'1º SGT BM',qbmp:'Q10/02',nome:'FLÁVIO DA SILVA MOREIRA DE ARAUJO',guerra:'DE ARAUJO',rg:'31498',id:'000614429-2',unidade:'DBM 5/M'},
+{posto:'2º SGT BM',qbmp:'Q10/08',nome:'FELIPE DE OLIVEIRA PACHECO',guerra:'PACHECO',rg:'44800',id:'004350096-0',unidade:'DBM 5/M'},
+{posto:'SD BM',qbmp:'Q08/24',nome:'GUILHERME DOS SANTOS SILVA BORGES PINHO',guerra:'GUILHERME',rg:'54311',id:'0051510200',unidade:'DBM 5/M'},
+{posto:'SD BM',qbmp:'Q08/24',nome:'GUILHERME PINHEIRO SOUZA DA SILVA',guerra:'PINHEIRO',rg:'54340',id:'0051520362',unidade:'DBM 5/M'},
+{posto:'SUBTEN BM',qbmp:'Q10/97',nome:'HENRIQUE DE SOUZA',guerra:'HENRIQUE',rg:'21244',id:'000612477-1',unidade:'DBM 5/M'},
+{posto:'SD BM',qbmp:'Q08/24',nome:'HIGOR CARDOSO TINTEL',guerra:'TINTEL',rg:'54376',id:'0051314452',unidade:'DBM 5/M'},
+{posto:'SUBTEN BM',qbmp:'Q00/97',nome:'IGIDIO ALVES DA SILVA',guerra:'IGIDIO',rg:'21833',id:'000612646-4',unidade:'DBM 5/M'},
+{posto:'SUBTEN BM',qbmp:'Q10/98',nome:'IRLEY ALMEIDA MATHIAS',guerra:'IRLEY',rg:'24261',id:'002641607-7',unidade:'DBM 5/M'},
+{posto:'SUBTEN BM',qbmp:'Q00/98',nome:'JULIO CESAR DE ASSIS SANTOS',guerra:'DE ASSIS',rg:'24392',id:'002660882-0',unidade:'DBM 5/M'},
+{posto:'SUBTEN BM',qbmp:'Q10/90',nome:'JULIO CESAR CARDOSO DOS SANTOS',guerra:'CARDOSO',rg:'13107',id:'000610524-6',unidade:'DBM 5/M'},
+{posto:'SUBTEN BM',qbmp:'Q00/00',nome:'JOÃO LUIZ ALVES FAILDE DE SOUZA',guerra:'FAILDE',rg:'27226',id:'002622478-0',unidade:'DBM 5/M'},
+{posto:'1º SGT BM',qbmp:'Q02/94',nome:'JOSE MARCELO DO NASCIMENTO',guerra:'J MARCELO',rg:'18150',id:'002667418-1',unidade:'DBM 5/M'},
+{posto:'2º SGT BM',qbmp:'Q06/08',nome:'JONAS MARIANO DE ASSIS',guerra:'JONAS MARIANO',rg:'42881',id:'004345691-0',unidade:'DBM 5/M'},
+{posto:'SD BM',qbmp:'Q08/24',nome:'KARLA CUNHA CAMPOS',guerra:'KARLA CUNHA',rg:'54448',id:'0051518295',unidade:'DBM 5/M'},
+{posto:'SUBTEN BM',qbmp:'Q00/97',nome:'LUIS HENRIQUE PONTES DE CARVALHO',guerra:'PONTES',rg:'22122',id:'000883747-3',unidade:'DBM 5/M'},
+{posto:'2º SGT BM',qbmp:'Q06/08',nome:'LUCIANA DE ABREU OLIVA',guerra:'LUCIANA',rg:'42593',id:'004340678-5',unidade:'DBM 5/M'},
+{posto:'CB BM',qbmp:'Q10/15',nome:'LUIZ VINICIUS FERREIRA AMARAL',guerra:'VINICIUS AMARAL',rg:'53288',id:'0050774140',unidade:'DBM 5/M'},
+{posto:'SD BM',qbmp:'Q02/24',nome:'LUCAS PERY DE OLIVEIRA',guerra:'PERY',rg:'54116',id:'0051517884',unidade:'DBM 5/M'},
+{posto:'SUBTEN BM',qbmp:'Q10/90',nome:'MARCOS TADEU NASCIMENTO DOS SANTOS',guerra:'MARCOS TADEU',rg:'12731',id:'002662224-6',unidade:'DBM 5/M'},
+{posto:'SUBTEN BM',qbmp:'Q10/97',nome:'MARCELO GOMES DA SILVA',guerra:'GOMES',rg:'22550',id:'000612978-1',unidade:'DBM 5/M'},
+{posto:'SD BM',qbmp:'Q08/24',nome:'MARCOS VINICIOS DE ALMEIDA ARAUJO',guerra:'ALMEIDA',rg:'54430',id:'0050853457',unidade:'DBM 5/M'},
+{posto:'SUBTEN BM',qbmp:'Q10/98',nome:'PAULO CESAR LAURIANO IGNACIO',guerra:'LAURIANO',rg:'24497',id:'004142411-5',unidade:'DBM 5/M'},
+{posto:'2º SGT BM',qbmp:'Q06/08',nome:'PRISCILA DE AGUIAR BARRETO',guerra:'PRISCILA BARRETO',rg:'42498',id:'004343356-1',unidade:'DBM 5/M'},
+{posto:'SUBTEN BM',qbmp:'Q02/98',nome:'RICARDO ALVES FREIRE',guerra:'R ALVES',rg:'23995',id:'002625731-9',unidade:'DBM 5/M'},
+{posto:'SUBTEN BM',qbmp:'Q02/99',nome:'RAUL DA SILVA TAVARES',guerra:'TAVARES',rg:'25606',id:'000613370-3',unidade:'DBM 5/M'},
+{posto:'2º SGT BM',qbmp:'Q06/08',nome:'ROBSON SANTANA DE SÁ',guerra:'DE SÁ',rg:'43059',id:'004340593-2',unidade:'DBM 5/M'},
+{posto:'SD BM',qbmp:'Q08/24',nome:'RUAN ROSA DE OLIVEIRA',guerra:'RUAN',rg:'54745',id:'0051587394',unidade:'DBM 5/M'},
+{posto:'SD BM',qbmp:'Q08/24',nome:'SAULO HERDY CARDOSO',guerra:'HERDY CARDOSO',rg:'54435',id:'0051519461',unidade:'DBM 5/M'},
+{posto:'2º SGT BM',qbmp:'Q02/08',nome:'TIAGO DE SOUZA ARAUJO COSTA',guerra:'TIAGO COSTA',rg:'43640',id:'004341594-6',unidade:'DBM 5/M'},
+{posto:'2º SGT BM',qbmp:'Q02/08',nome:'UILTON VIEIRA SANTOS',guerra:'UILTON',rg:'43626',id:'004341582-2',unidade:'DBM 5/M'},
+{posto:'SUBTEN BM',qbmp:'Q08/97',nome:'WELLINGTON DA SILVA SAMPAIO',guerra:'SAMPAIO',rg:'22190',id:'000612789-4',unidade:'DBM 5/M'},
+{posto:'2º SGT BM',qbmp:'Q06/08',nome:'WALLACE ALVES BASTOS',guerra:'WALLACE',rg:'42834',id:'004339103-6',unidade:'DBM 5/M'},
+{posto:'3º SGT BM',qbmp:'Q02/13',nome:'WAGNER DA SILVA CASTELO',guerra:'CASTELO',rg:'49046',id:'005010753-4',unidade:'DBM 5/M'},
+{posto:'SD BM',qbmp:'Q02/24',nome:'WILLIAM OLIVEIRA BARBOSA JUNIOR',guerra:'WILLIAM JUNIOR',rg:'54202',id:'0051520389',unidade:'DBM 5/M'},
+{posto:'SUBTEN BM',qbmp:'Q10/97',nome:'VILMAR MACEDO DA SILVA',guerra:'VILMAR',rg:'21203',id:'004142324-0',unidade:'DBM 5/M'},
+{posto:'2º SGT BM',qbmp:'Q00/08',nome:'VICTOR CÉSAR SABARÁ DE FIGUEIREDO',guerra:'SABARÁ',rg:'44012',id:'004341807-4',unidade:'DBM 5/M'},
+{posto:'SD BM',qbmp:'Q02/24',nome:'VITOR MACHADO DOS SANTOS',guerra:'MACHADO',rg:'54216',id:'0051520435',unidade:'DBM 5/M'},
+{posto:'SD BM',qbmp:'Q08/24',nome:'YURI FERRAZ GITIRANA',guerra:'YURI GITIRANA',rg:'54375',id:'0051508320',unidade:'DBM 5/M'},
+{posto:'SD BM',qbmp:'Q08/25',nome:'PIETRA CARRILHO DA SILVA',guerra:'CARRILHO',rg:'55032',id:'0051657767',unidade:'DBM 5/M'},
+{posto:'SD BM',qbmp:'Q08/25',nome:'ISABELE DE FARIA RAMOS LOPES',guerra:'ISABELLE',rg:'55002',id:'0051660285',unidade:'DBM 5/M'},
+{posto:'SD BM',qbmp:'Q08/25',nome:'GABRIEL PRADO PAIVA DA SILVA',guerra:'PAIVA',rg:'54969',id:'0051319292',unidade:'DBM 5/M'},
+{posto:'SD BM',qbmp:'Q08/25',nome:'ALEXANDRE CORDOVA DA SILVA',guerra:'CORDOVA',rg:'61430',id:'0051318580',unidade:'DBM 5/M'},
+{posto:'SD BM',qbmp:'Q02/24',nome:'JHONATA SANTIAGO RODRIGUES',guerra:'SANTIAGO',rg:'54118',id:'0051516110',unidade:'DBM 5/M'}
+];
+let militares=[], results=[], pdfDoc=null, pdfBytes=null, currentPage=1, pdfName='';
+function norm(s){return String(s||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toUpperCase().replace(/\s+/g,' ').trim()}
 function digits(s){return String(s||'').replace(/\D/g,'')}
-function esc(s){return String(s||'').replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]))}
-function mark(txt, terms){let out=esc(txt); terms.filter(Boolean).sort((a,b)=>b.length-a.length).forEach(t=>{if(t.length<3)return; let r=new RegExp('('+t.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+')','ig'); out=out.replace(r,'<span class="mark">$1</span>')}); return out}
-
-async function readFileAsText(file){
- if(!file)return '';
- if(file.name.toLowerCase().endsWith('.pdf')) return await extractPdfText(file,true);
- if(/\.xlsx?$/.test(file.name.toLowerCase())){const buf=await file.arrayBuffer(); const wb=XLSX.read(buf,{type:'array'}); return wb.SheetNames.map(n=>XLSX.utils.sheet_to_csv(wb.Sheets[n],{FS:' '})).join('\n')}
- return await file.text();
+function escapeHtml(s){return String(s||'').replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]))}
+function init(){militares=FIXED_BASE.map(m=>prep(m)); renderBaseStatus('✅ Base oficial DBM 5/M carregada automaticamente: '+militares.length+' militares.');}
+function prep(m){m.nome=norm(m.nome);m.guerra=norm(m.guerra);m.posto=norm(m.posto);m.qbmp=norm(m.qbmp);m.unidade=norm(m.unidade||'DBM 5/M');m.rg=digits(m.rg);m.id=digits(m.id);return m}
+function renderBaseStatus(msg){document.getElementById('baseStatus').className='status ok';document.getElementById('baseStatus').textContent=msg;document.getElementById('basePreview').innerHTML=militares.slice(0,12).map(m=>`${m.posto} ${m.qbmp} ${m.nome} (${m.guerra}) | RG ${m.rg} | ID ${m.id} | ${m.unidade}`).join('<br>')+(militares.length>12?'<br>...':'')}
+function loadExample(){document.getElementById('baseText').value='SUBTEN BM Q00/98 MILITAR TESTE DA SILVA TESTE 99999 001234567-8 DBM 5/M';}
+async function fileToText(file){const name=file.name.toLowerCase(); if(name.endsWith('.pdf')) return await readPdfText(file); if(name.endsWith('.xlsx')||name.endsWith('.xls')){const buf=await file.arrayBuffer();const wb=XLSX.read(buf,{type:'array'});let out=[];wb.SheetNames.forEach(sn=>{out.push(XLSX.utils.sheet_to_csv(wb.Sheets[sn],{FS:';'}));});return out.join('\n')} return await file.text();}
+async function readPdfText(file){const arr=await file.arrayBuffer();const doc=await pdfjsLib.getDocument({data:arr}).promise;let pages=[];for(let p=1;p<=doc.numPages;p++){const page=await doc.getPage(p);const tc=await page.getTextContent();pages.push(tc.items.map(i=>i.str).join(' '));}return pages.join('\n')}
+function processTextToMilitares(text){let rows=[]; let lines=String(text||'').split(/\n+/).map(l=>norm(l)).filter(Boolean); let whole=norm(text);
+// CSV/XLSX format by separators
+for(const raw of String(text||'').split(/\n+/)){let parts=raw.split(/[;,\t]/).map(x=>x.trim()).filter(Boolean); if(parts.length>=6 && /RG|POSTO|NOME/i.test(raw)===false){let rg=parts.find(p=>digits(p).length>=4&&digits(p).length<=6);let id=parts.find(p=>digits(p).length>=7);if(rg&&id){rows.push(prep({posto:parts[0],qbmp:parts[1]||'',nome:parts[2]||'',guerra:parts[3]||'',rg,id,unidade:parts[6]||parts[5]||'DBM 5/M'}));}}
 }
-
-function textItemsToLines(items){
- // Agrupa o texto do PDF por coordenada vertical. Isso evita o erro de transformar a tabela em um bloco gigante.
- const rows=[];
- for(const it of items){
-   const s=(it.str||'').trim(); if(!s) continue;
-   const x=it.transform[4], y=it.transform[5];
-   let row=rows.find(r=>Math.abs(r.y-y)<3);
-   if(!row){row={y,items:[]}; rows.push(row)}
-   row.items.push({x,s});
- }
- rows.sort((a,b)=>b.y-a.y);
- return rows.map(r=>{
-   r.items.sort((a,b)=>a.x-b.x);
-   let out='', lastX=null;
-   for(const it of r.items){
-     if(lastX!==null){
-       const gap=it.x-lastX;
-       out += gap>70?'    ':gap>20?'  ':' ';
-     }
-     out += it.s;
-     lastX=it.x + it.s.length*5;
-   }
-   return out.replace(/\s+/g,' ').trim();
- }).filter(Boolean);
-}
-
-async function extractPdfText(file, keepLines=false){
- const buf=await file.arrayBuffer();
- const pdf=await pdfjsLib.getDocument({data:buf}).promise;
- let all='';
- for(let p=1;p<=pdf.numPages;p++){
-   let page=await pdf.getPage(p);
-   let tc=await page.getTextContent();
-   let lines=textItemsToLines(tc.items);
-   all += `\n--- PAGINA ${p} ---\n` + (keepLines?lines.join('\n'):lines.join(' '));
- }
- return all;
-}
-
-function loadExample(){ $('baseText').value='SD BM Q02/24 WILLIAM OLIVEIRA BARBOSA JUNIOR WILLIAM JUNIOR 54202 0051520389 DBM 5/M\n2º SGT BM Q10/08 FELIPE DE OLIVEIRA PACHECO PACHECO 44800 004350096-0 DBM 5/M\nSUBTEN BM Q00/98 FABIO MACIEL DO CARMO DO CARMO 23853 002652821-5 DBM 5/M'; processBase();}
-
-function flexNum(n){return String(n||'').replace(/\D/g,'').split('').join('\\D*')}
-function parseBaseLine(line){
- let L=norm(line).replace(/º/g,'º').replace(/\bO(?=\d)/g,'0');
- if(!/(DBM\s*5\/?M|DBM\s*5M)/.test(L)) return null;
- if(/\b(POSTO|QBMP|NOME|GUERRA|FUNCIONAL|UNIDADE|PAGINA)\b/.test(L) && !/\d{4,6}/.test(L)) return null;
- const rankRe='(TEN\\s*CEL|1[ºO]?\\s*TEN|2[ºO]?\\s*TEN|CAP|MAJ|SUBTEN|1[ºO]?\\s*SGT|2[ºO]?\\s*SGT|3[ºO]?\\s*SGT|CB|SD)\\s+BM';
- const qbmpRe='Q[0-9O]{2}\\/?[0-9O]{2}';
- let m=L.match(new RegExp('^\\s*'+rankRe+'\\s+('+qbmpRe+')\\s+(.+?)\\s+(\\d{4,6})\\s+(\\d[\\d\\.\\-\\s]{6,16})\\s+(DBM\\s*5\\/?M|DBM\\s*5M)\\b'));
- if(!m) m=L.match(new RegExp(rankRe+'\\s+('+qbmpRe+')\\s+(.+?)\\s+(\\d{4,6})\\s+(\\d[\\d\\.\\-\\s]{6,16})\\s+(DBM\\s*5\\/?M|DBM\\s*5M)\\b'));
- if(!m) return null;
- let posto=m[1].replace(/O/g,'º');
- let qbmp=m[2].replace(/O/g,'0');
- let body=m[3].replace(/\b(POSTO|QBMP|NOME|N GUERRA|RG|ID|FUNCIONAL|UNIDADE)\b/g,' ').replace(/\s+/g,' ').trim();
- let rgShow=m[4], idShow=m[5].replace(/\s+/g,'').replace(/(\d{9})(\d)$/,'$1-$2');
- let rg=digits(rgShow), id=digits(idShow);
- if(rg.length<4 || id.length<7 || body.length<4) return null;
- return {posto,qbmp,nome:body,guerra:body.split(' ').slice(-2).join(' '),rg,rgShow,id,idShow,unidade:'DBM 5/M'};
-}
-function processBase(){
- const raw=$('baseText').value;
- militares=[];
- const lines=raw.split(/\n+/).map(x=>x.trim()).filter(Boolean);
- for(const line of lines){
-   const mil=parseBaseLine(line);
-   if(mil && !militares.some(x=>x.rg===mil.rg || x.id===mil.id)) militares.push(mil);
- }
- // Fallback para PDFs que ainda venham em blocos: procura registros entre um posto BM e a unidade.
- if(militares.length<10){
-   const text=norm(raw).replace(/\n/g,' ');
-   const re=/(TEN\s*CEL|1[ºO]?\s*TEN|2[ºO]?\s*TEN|CAP|MAJ|SUBTEN|1[ºO]?\s*SGT|2[ºO]?\s*SGT|3[ºO]?\s*SGT|CB|SD)\s+BM\s+(Q[0-9O]{2}\/?[0-9O]{2})\s+(.{8,120}?)\s+(\d{4,6})\s+(\d[\d\.\-\s]{6,16})\s+(DBM\s*5\/?M|DBM\s*5M)\b/g;
-   let m; while((m=re.exec(text))){
-     let body=m[3].replace(/\b(POSTO|QBMP|NOME|N GUERRA|RG|ID|FUNCIONAL|UNIDADE)\b/g,' ').replace(/\s+/g,' ').trim();
-     let rg=digits(m[4]), id=digits(m[5]);
-     if(body.length>4 && rg.length>=4 && id.length>=7 && !militares.some(x=>x.rg===rg||x.id===id)) militares.push({posto:m[1].replace(/O/g,'º'),qbmp:m[2].replace(/O/g,'0'),nome:body,guerra:body.split(' ').slice(-2).join(' '),rg,rgShow:m[4],id,idShow:m[5].replace(/\s+/g,''),unidade:'DBM 5/M'});
-   }
- }
- localStorage.setItem('radar_militares_v6',JSON.stringify(militares));
- if(militares.length){$('baseStatus').innerHTML=`✅ Base processada: ${militares.length} militares identificados e salvos neste aparelho.`; $('basePreview').innerHTML='<b>Primeiros registros:</b><br>'+militares.slice(0,10).map(x=>`${x.nome} | RG ${x.rgShow} | ID ${x.idShow} | ${x.unidade}`).join('<br>') + (militares.length<55?'<br><span class="warn">⚠️ Menos que 55 identificados. Verifique se o PDF está legível ou tente colar a relação em texto.</span>':'');}
- else {$('baseStatus').innerHTML='⚠️ Nenhum militar identificado. Verifique se a relação tem RG, ID e DBM 5/M.'; $('basePreview').innerHTML='';}
-}
-try{militares=JSON.parse(localStorage.getItem('radar_militares_v6')||'[]'); if(militares.length){$('baseStatus').innerHTML=`✅ Base carregada do aparelho: ${militares.length} militares.`;}}catch(e){}
-
-$('pdfFile').addEventListener('change',async e=>{let f=e.target.files[0]; if(!f)return; pdfFileData=await f.arrayBuffer(); pdfDoc=await pdfjsLib.getDocument({data:pdfFileData.slice(0)}).promise; $('pdfStatus').innerHTML=`✅ PDF carregado: ${f.name} (${pdfDoc.numPages} páginas).`;});
-function boletimNum(text){let m=norm(text).match(/N[º°]?\s*(\d{2,4})\s*,?\s*DE/); return m?m[1]:''}
-function tipoPublicacao(text){let t=norm(text); if(t.includes('MOVIMENTACAO'))return 'Movimentação'; if(t.includes('FERIAS'))return 'Férias'; if(t.includes('LICENCA'))return 'Licença'; if(t.includes('JUNTA')||t.includes('SAUDE'))return 'Saúde'; if(t.includes('SINDICANCIA')||t.includes('DISCIPLINA')||t.includes('PUNICAO'))return 'Justiça/Disciplina'; if(t.includes('CURSO')||t.includes('INSTRUCAO'))return 'Curso/Instrução'; if(t.includes('ELOGIO'))return 'Elogio'; return 'Publicação';}
-function snippet(text, idx, size=380){let a=Math.max(0,idx-size/2), b=Math.min(text.length,idx+size/2); return text.slice(a,b).replace(/\s+/g,' ').trim()}
-function findMilitaryPattern(txt, centerIdx){
- const window=txt.slice(Math.max(0,centerIdx-650), Math.min(txt.length,centerIdx+650));
- const re=/(SUBTEN|SD|CB|\d[ºO]?\s*SGT|\d[ºO]?\s*TEN|CAP|MAJ|TEN\s*CEL|CEL)\s+BM\s+(Q[\dO]{2}\/?[\dO]{2})?\s*([A-ZÁÉÍÓÚÂÊÔÃÕÇ\s]{6,80}?),?\s*RG\s*([\d\.]+),?\s*ID\s*FUNCIONAL\s*([\d\.\-]+)/i;
- const m=window.match(re); if(!m)return null; return {posto:norm(m[1]+' BM '+(m[2]||'')), nome:norm(m[3]), rg:digits(m[4]), id:digits(m[5]), rgShow:m[4], idShow:m[5]};
-}
-function strictIndexById(txt,mil){
- const idFlex=flexNum(mil.id), rgFlex=flexNum(mil.rg);
- let m;
- // ID só conta se estiver com rótulo ID FUNCIONAL ou isolado como número completo.
- if(mil.id && mil.id.length>=7){
-   m=txt.match(new RegExp('ID\\s*FUNCIONAL\\D{0,12}'+idFlex));
-   if(m) return {idx:m.index, by:'ID funcional'};
-   m=txt.match(new RegExp('(^|\\D)'+idFlex+'(?!\\d)'));
-   if(m && mil.id.length>=9) return {idx:m.index, by:'ID funcional'};
- }
- // RG só conta se vier precedido por RG. Isso corta quase todos os falsos positivos de CPF, processo, datas etc.
- if(mil.rg && mil.rg.length>=4){
-   m=txt.match(new RegExp('RG\\D{0,10}'+rgFlex+'(?!\\d)'));
-   if(m) return {idx:m.index, by:'RG'};
- }
- return null;
-}
-async function analyzePdf(){
- if(!pdfDoc){alert('Escolha o boletim PDF primeiro.');return}
- if(!militares.length){alert('Processe a base de militares primeiro.');return}
- results=[]; $('results').innerHTML=''; $('bar').style.width='0%'; let firstText=''; let seen=new Set();
- const aliases=$('unitAliases').value.split(',').map(norm).filter(Boolean);
- for(let p=1;p<=pdfDoc.numPages;p++){
-   let page=await pdfDoc.getPage(p); let tc=await page.getTextContent(); let lines=textItemsToLines(tc.items); let raw=lines.join(' '); let txt=norm(raw); if(p===1) firstText=txt; let bnum=boletimNum(firstText+' '+txt)||''; let tipo=tipoPublicacao(txt);
-   for(const mil of militares){
-     const hit=strictIndexById(txt,mil);
-     if(hit){ let key=`${p}-${mil.rg}-${mil.id}-${hit.by}`; if(seen.has(key))continue; seen.add(key); results.push({kind:'militar',mil,pagina:p,boletim:bnum,tipo,conf:hit.by==='ID funcional'?'Alta':'Média',dados:hit.by,trecho:snippet(txt,hit.idx),terms:[mil.nome,mil.guerra,mil.rgShow,mil.idShow]}); }
-   }
-   // Entradas para a unidade: só registra se houver padrão completo de militar + RG + ID no mesmo trecho.
-   aliases.forEach(alias=>{ let start=0; while(true){let idx=txt.indexOf(alias,start); if(idx<0)break; start=idx+alias.length; let before=txt.slice(Math.max(0,idx-80),idx); if(!/(PARA\s*:?[\s\-A-Z0-9º\/]*$|NO\s*$|NA\s*$)/.test(before)) continue; let mp=findMilitaryPattern(txt,idx); if(mp){let key=`${p}-IN-${mp.rg}-${mp.id}`; if(!seen.has(key)){seen.add(key); results.push({kind:'entrada',mil:{nome:mp.nome,guerra:mp.nome.split(' ').slice(-2).join(' '),rg:mp.rg,id:mp.id,rgShow:mp.rgShow,idShow:mp.idShow,unidade:$('unitMain').value},pagina:p,boletim:bnum,tipo:'Movimentação para unidade',conf:'Alta',dados:'Destino da unidade + RG/ID no trecho',trecho:snippet(txt,idx,560),terms:[mp.nome,mp.rgShow,mp.idShow,alias]});}}
-   }});
-   $('bar').style.width=Math.round(p/pdfDoc.numPages*100)+'%';
- }
- // Ordena por página e nome, mantendo poucos falsos positivos no topo.
- results.sort((a,b)=>a.pagina-b.pagina || a.mil.nome.localeCompare(b.mil.nome));
- renderResults(); $('pdfStatus').innerHTML=`✅ Análise concluída: ${results.length} ocorrência(s) encontrada(s).`;
-}
-function renderResults(){ $('count').textContent=results.length; const box=$('results'); if(!results.length){box.innerHTML='<div class="small">Nenhuma ocorrência encontrada.</div>'; return;} box.innerHTML=results.map((r,i)=>`<div class="res"><h3>${esc(r.mil.nome||'Ocorrência da unidade')}</h3><span class="badge ${r.conf==='Alta'?'high':r.conf==='Média'?'med':'low'}">${r.conf} confiança</span><span class="badge">${esc(r.tipo)}</span><span class="badge">Página ${r.pagina}</span>${r.boletim?`<span class="badge">Boletim nº ${esc(r.boletim)}</span>`:''}<p><b>Dados encontrados:</b> ${esc(r.dados)}</p><p><b>RG:</b> ${esc(r.mil.rgShow||r.mil.rg||'-')} &nbsp; <b>ID:</b> ${esc(r.mil.idShow||r.mil.id||'-')} &nbsp; <b>Unidade:</b> ${esc(r.mil.unidade||'-')}</p><div class="trecho">${mark(r.trecho,r.terms)}</div><div class="actions"><button class="primary" onclick="openPage(${r.pagina})">📄 Ir para página</button><button class="green" onclick="copyWhats(${i})">Copiar WhatsApp</button></div></div>`).join('');}
-async function openPage(p){ if(!pdfDoc)return; currentPage=p; $('viewer').style.display='flex'; await renderPage();}
-async function renderPage(){let page=await pdfDoc.getPage(currentPage); let vp=page.getViewport({scale:1.6}); let c=$('pdfCanvas'), ctx=c.getContext('2d'); c.width=vp.width; c.height=vp.height; $('viewerTitle').textContent=`Página ${currentPage} de ${pdfDoc.numPages}`; await page.render({canvasContext:ctx,viewport:vp}).promise;}
-function closeViewer(){$('viewer').style.display='none'} function prevPage(){if(currentPage>1){currentPage--;renderPage()}} function nextPage(){if(pdfDoc&&currentPage<pdfDoc.numPages){currentPage++;renderPage()}}
-function line(r){return `🚒 ${r.tipo}\n${r.mil.nome}\nRG ${r.mil.rgShow||r.mil.rg||'-'} | ID ${r.mil.idShow||r.mil.id||'-'}\n📄 Boletim ${r.boletim||'-'} - Página ${r.pagina}\nTrecho: ${r.trecho}`}
-async function copyWhats(i){await navigator.clipboard.writeText(line(results[i])); alert('Texto copiado.');}
-async function copyReport(){await navigator.clipboard.writeText(results.map(line).join('\n\n---\n\n')); alert('Relatório copiado.');}
-function exportCSV(){let csv='militar,rg,id,unidade,tipo,boletim,pagina,confianca,dados,trecho\n'+results.map(r=>[r.mil.nome,r.mil.rgShow||r.mil.rg,r.mil.idShow||r.mil.id,r.mil.unidade,r.tipo,r.boletim,r.pagina,r.conf,r.dados,r.trecho].map(v=>'"'+String(v||'').replace(/"/g,'""')+'"').join(',')).join('\n'); let a=document.createElement('a'); a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv'})); a.download='resultado_boletim.csv'; a.click();}
-function clearResults(){results=[];renderResults();$('pdfStatus').innerHTML='';$('bar').style.width='0%'}
+// fallback: pattern per fixed format line
+const re=/(1º TEN BM|2º TEN BM|SUBTEN BM|1º SGT BM|2º SGT BM|3º SGT BM|CB BM|SD BM)\s+(Q\d{2}\/\d{2}|QOA\/\d{2}|QOC\/\d{2})\s+(.+?)\s+(\d{5})\s+(\d[\d\s.-]{7,13})\s+DBM\s*5\/?M/g;
+let m; while((m=re.exec(whole))){let before=m[3].trim(); let words=before.split(' '); let guerra=words.slice(-2).join(' '); let nome=before; rows.push(prep({posto:m[1],qbmp:m[2],nome,guerra,rg:m[4],id:m[5],unidade:'DBM 5/M'}));}
+return rows.filter(x=>x.rg&&x.id&&x.nome.length>4)}
+async function processExtraBase(){try{let text=document.getElementById('baseText').value||'';const f=document.getElementById('baseFile').files[0]; if(f) text+='\n'+await fileToText(f); const extra=processTextToMilitares(text); const map=new Map(militares.map(m=>[m.rg,m])); extra.forEach(m=>map.set(m.rg,m)); militares=[...map.values()]; renderBaseStatus(`✅ Base atualizada: ${militares.length} militares carregados (${extra.length} importados/agregados).`);}catch(e){document.getElementById('baseStatus').className='status err';document.getElementById('baseStatus').textContent='Erro ao importar base extra: '+e.message}}
+function rgRegex(rg){const d=digits(rg); return new RegExp(`\\bRG\\s*(?:N[ºO]?\\s*)?0*${d.slice(0,-3)}[\\s.]*${d.slice(-3)}\\b`,'i')}
+function idRegex(id){const d=digits(id); return new RegExp(`\\bID\\s*FUNCIONAL\\s*0*${d.slice(0,-1)}[\\s.-]*${d.slice(-1)}\\b|\\bID\\s*0*${d.slice(0,-1)}[\\s.-]*${d.slice(-1)}\\b`,'i')}
+function classify(text){let t=norm(text); if(t.includes('MOVIMENTACAO')||t.includes('TRANSFERIR')||t.includes('CLASSIFICAR'))return 'Movimentação'; if(t.includes('FERIAS'))return 'Férias'; if(t.includes('LICENCA'))return 'Licença'; if(t.includes('JUNTA')||t.includes('SAUDE')||t.includes('APTO')||t.includes('INCAPAZ'))return 'Saúde'; if(t.includes('CURSO')||t.includes('INSTRUCAO'))return 'Curso/Instrução'; if(t.includes('SINDICANCIA')||t.includes('DISCIPLINA'))return 'Justiça/Disciplina'; return 'Publicação'}
+function getSnippet(text, idx){let a=Math.max(0,idx-230), b=Math.min(text.length,idx+430);return text.slice(a,b).replace(/\s+/g,' ').trim()}
+function findMatches(pageText,pageNo,boletim){let out=[]; const t=pageText.replace(/\s+/g,' '); const nt=norm(t); for(const mil of militares){let score=0, found=[]; let pos=-1; const rr=rgRegex(mil.rg); const ir=idRegex(mil.id); let rm=rr.exec(t), im=ir.exec(t); if(rm){score+=60;found.push('RG');pos=rm.index} if(im){score+=80;found.push('ID funcional'); if(pos<0)pos=im.index}
+// Only name without RG/ID is weak, but can support
+let nameHit=nt.includes(mil.nome); let guerraHit=mil.guerra.length>=4 && nt.includes(mil.guerra); if(nameHit){score+=25;found.push('nome completo'); if(pos<0)pos=nt.indexOf(mil.nome)} if(guerraHit && (rm||im||nameHit)){score+=10;found.push('nome de guerra')}
+if(score>=60){let sn=getSnippet(t,pos>=0?pos:0); out.push({militar:mil,page:pageNo,boletim,tipo:classify(t),score,found:[...new Set(found)],snippet:sn});}}
+return out}
+function extractBoletimName(name,text){let m=norm(text).match(/N[ºO]\s*(\d{3}).{0,30}DE\s*(\d{1,2})\s*DE\s*([A-ZÇ]+)\s*DE\s*(\d{4})/); if(m)return m[1]; let n=String(name).match(/BOL\D*(\d{3})/i); return n?n[1]:'-'}
+async function analyzePdf(){try{if(!militares.length){alert('Base não carregada. Recarregue a página.');return}const file=document.getElementById('pdfFile').files[0];if(!file){alert('Escolha o boletim PDF.');return}pdfName=file.name;pdfBytes=await file.arrayBuffer();pdfDoc=await pdfjsLib.getDocument({data:pdfBytes.slice(0)}).promise;results=[];document.getElementById('pdfStatus').className='status';document.getElementById('pdfStatus').textContent='Lendo boletim...';let firstText='';let boletim='-';for(let p=1;p<=pdfDoc.numPages;p++){const page=await pdfDoc.getPage(p);const tc=await page.getTextContent();const txt=tc.items.map(i=>i.str).join(' '); if(p<=2) firstText+=' '+txt; if(p===2) boletim=extractBoletimName(file.name,firstText); results.push(...findMatches(txt,p,boletim)); document.getElementById('bar').style.width=Math.round((p/pdfDoc.numPages)*100)+'%'; await new Promise(r=>setTimeout(r,0));}
+// dedupe by rg+page
+let map=new Map(); results.forEach(r=>{let k=r.militar.rg+'-'+r.page; if(!map.has(k)||map.get(k).score<r.score)map.set(k,r)}); results=[...map.values()].sort((a,b)=>a.page-b.page||b.score-a.score); renderResults();document.getElementById('pdfStatus').className='status ok';document.getElementById('pdfStatus').textContent=`✅ Análise concluída: ${results.length} ocorrência(s) encontrada(s).`; }catch(e){document.getElementById('pdfStatus').className='status err';document.getElementById('pdfStatus').textContent='Erro ao analisar PDF: '+e.message}}
+function conf(score){return score>=100?['Alta confiança','green']:score>=70?['Média confiança','yellow']:['Baixa confiança','red']}
+function highlight(sn,m){let h=escapeHtml(sn); [m.nome,m.guerra,m.rg,m.id].filter(Boolean).forEach(v=>{let val=escapeHtml(v); if(val.length>3) h=h.replace(new RegExp(val.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'),'gi'),'<span class="highlight">$&</span>')}); return h}
+function renderResults(){document.getElementById('count').textContent=results.length; const el=document.getElementById('results'); el.innerHTML=results.map((r,i)=>{let [c,cls]=conf(r.score);let m=r.militar;return `<div class="result"><h3>${m.nome} ${m.guerra}</h3><span class="pill ${cls==='green'?'':cls}">${c}</span><span class="pill">${r.tipo}</span><span class="pill">Página ${r.page}</span><span class="pill">Boletim nº ${r.boletim}</span><p><b>Dados encontrados:</b> ${r.found.join(', ')}</p><p><b>RG:</b> ${m.rg} &nbsp; <b>ID:</b> ${m.id} &nbsp; <b>Unidade:</b> ${m.unidade}</p><div class="snippet">${highlight(r.snippet,m)}</div><button class="primary" onclick="openPage(${r.page})">📄 Ir para página</button> <button class="green" onclick="copyWhats(${i})">Copiar WhatsApp</button></div>`}).join('')||'<p class="muted">Nenhum resultado ainda.</p>'}
+async function openPage(p){if(!pdfDoc)return; currentPage=p;document.getElementById('viewer').style.display='block'; await renderPage(); document.getElementById('viewer').scrollIntoView({behavior:'smooth'});}
+async function renderPage(){const page=await pdfDoc.getPage(currentPage); const scale=Math.min(1.7, Math.max(1, window.innerWidth/720)); const viewport=page.getViewport({scale}); const canvas=document.getElementById('pdfCanvas'); const ctx=canvas.getContext('2d'); canvas.width=viewport.width; canvas.height=viewport.height; document.getElementById('viewerTitle').textContent=`Página ${currentPage} de ${pdfDoc.numPages}`; await page.render({canvasContext:ctx,viewport}).promise;}
+function prevPage(){if(currentPage>1){currentPage--;renderPage()}} function nextPage(){if(pdfDoc&&currentPage<pdfDoc.numPages){currentPage++;renderPage()}}
+function msg(r){let m=r.militar;return `🚨 ${r.tipo}\n\n${m.posto} ${m.qbmp} ${m.nome}, RG ${m.rg}, ID ${m.id}.\n\n📄 Boletim nº ${r.boletim}\n📌 Página ${r.page}\n\nTrecho:\n${r.snippet}`}
+async function copyWhats(i){await navigator.clipboard.writeText(msg(results[i])); alert('Mensagem copiada.')} async function copyReport(){await navigator.clipboard.writeText(results.map(msg).join('\n\n----------------\n\n')); alert('Relatório copiado.')}
+function exportCsv(){let csv='MILITAR;RG;ID;PAGINA;BOLETIM;TIPO;DADOS;TRECHO\n'+results.map(r=>`"${r.militar.nome}";"${r.militar.rg}";"${r.militar.id}";"${r.page}";"${r.boletim}";"${r.tipo}";"${r.found.join(', ')}";"${r.snippet.replace(/"/g,'""')}"`).join('\n');let blob=new Blob([csv],{type:'text/csv;charset=utf-8'});let a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='resultado_radar_boletins.csv';a.click()}
+function clearResults(){results=[];renderResults();document.getElementById('pdfStatus').textContent='';document.getElementById('bar').style.width='0'}
+init(); renderResults();
 </script>
-</body>
-</html>
+</body></html>
